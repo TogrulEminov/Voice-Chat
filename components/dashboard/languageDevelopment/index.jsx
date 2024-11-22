@@ -33,7 +33,7 @@ const LanguageDevelopment = () => {
       if (!blob) {
         throw new Error("Ses kaydı alınamadı");
       }
-
+      debugger;
       // Step 1: Process audio and get transcription
       const formData = new FormData();
       formData.append("audio", blob, "audio.wav");
@@ -46,6 +46,7 @@ const LanguageDevelopment = () => {
         const errorData = await audioResponse.json();
         throw new Error(errorData.error || "Ses işleme hatası");
       }
+      console.log(audioResponse);
 
       const audioData = await audioResponse.json();
       setTranscribedText(audioData.transcribedText);

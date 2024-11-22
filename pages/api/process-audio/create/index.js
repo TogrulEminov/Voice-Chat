@@ -89,12 +89,14 @@ export default async function handler(req, res) {
         transcribedText: transcription.text,
       });
     } catch (aiError) {
+      console.log("AiError", aiError);
       return res.status(500).json({
         status: "error",
         message: aiError || "Error processing audio with AI",
       });
     }
   } catch (error) {
+    console.log("error", error);
     return res.status(500).json({
       status: "Error",
       message: error.message || "Error processing audio upload",
