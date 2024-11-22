@@ -1,4 +1,5 @@
 import HomePageContainer from "@/containers/home";
-export default function Home() {
+
+export default function HomePage() {
   return <HomePageContainer />;
 }
