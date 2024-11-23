@@ -15,7 +15,7 @@ export default async function handler(req, res) {
       .json({ status: "error", message: "Method not allowed" });
   }
 
-  const { email, password, name } = req.body;
+  const { email, password, name } = JSON.parse(req.body);
 
   // Zorunlu alanların kontrolü
   if (!email || !password || !name) {

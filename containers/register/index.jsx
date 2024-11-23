@@ -24,22 +24,28 @@ export default function Register() {
     password: "",
   });
 
-  console.log(fields);
+  console.log(fields.name);
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFields({ ...fields, [name]: value });
+    setFields({
+      ...fields,
+      [name]: value, // Update the corresponding field
+    });
   };
   const handleRegister = async (event) => {
     event.preventDefault();
     setLoading(true);
 
     try {
-      const res = await postAPI("/auth/register", fields);
-
+      const { name, email, password } = fields;
+      const res = await postAPI("/auth/register", {
+        body: JSON.stringify(fields),
+      });
+      console.log("res", res);
       if (!res.ok) {
         const errorText = await res?.message;
         try {
@@ -49,7 +55,6 @@ export default function Register() {
           setMessage(`Error: ${errorText}`);
         }
       } else {
-        setMessage("Kayıt başarılı! Giriş yapabilirsiniz.");
         setFields({
           name: "",
           email: "",
