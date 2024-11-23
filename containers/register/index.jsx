@@ -24,6 +24,8 @@ export default function Register() {
     password: "",
   });
 
+  console.log(fields);
+
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -91,6 +93,7 @@ export default function Register() {
               <Input
                 id="email"
                 type="email"
+                name="email"
                 placeholder="Email"
                 value={fields.email}
                 onChange={handleChange}
@@ -107,6 +110,7 @@ export default function Register() {
               <Input
                 type="text"
                 id="name"
+                name="name"
                 required
                 placeholder="Name"
                 value={fields.name}
@@ -118,6 +122,7 @@ export default function Register() {
               <Input
                 type="password"
                 id="password"
+                name="name"
                 placeholder="Password"
                 value={fields.password}
                 onChange={handleChange}
