@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   // Create uploads directory if it doesn't exist
-  const uploadDir = path.join(process.cwd(), "uploads");
+  const uploadDir = path.join("/tmp", "uploads");
   try {
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
