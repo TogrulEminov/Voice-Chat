@@ -27,7 +27,13 @@ const ConversationHistory = () => {
         }
 
         const data = await response.json();
-        if (data) setConversations(data);
+        if (data) {
+          // Tarihe göre sıralama
+          const sortedConversations = data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setConversations(sortedConversations);
+        }
       } catch (err) {
         setError("Sunucuya bağlanırken bir hata oluştu.");
       } finally {
