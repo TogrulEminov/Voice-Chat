@@ -6,80 +6,60 @@ import { useDashboardStore } from "@/utils/dasboardStore";
 
 export default function AudioRecorder({ onRecordingComplete }) {
   const [isRecording, setIsRecording] = useState(false);
-  const setAsistantAudioUrl = useDashboardStore(
-    (state) => state.setAsistantAudioUrl
-  );
-  const setUserAudioUrl = useDashboardStore((state) => state.setUserAudioUrl);
-  const userAudioUrl = useDashboardStore((state) => state.userAudioUrl);
-
+  const { setAsistantAudioUrl, setUserAudioUrl, userAudioUrl } =
+    useDashboardStore((state) => state);
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
   useEffect(() => {
     return () => {
-      const tracks = audioRef.current?.srcObject?.getTracks();
-      tracks?.forEach((track) => track.stop());
-      audioRef.current = null;
-      mediaRecorderRef.current = null;
+      audioRef?.current?.srcObject
+        ?.getTracks()
+        .forEach((track) => track.stop());
     };
   }, []);
 
   const startRecording = async () => {
     try {
-      if (!window.MediaRecorder) {
-        alert("Tarayıcınız ses kaydını desteklemiyor.");
-        return;
-      }
-
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioRef.current.srcObject = stream;
 
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
 
+      mediaRecorder.ondataavailable = (event) =>
+        audioChunksRef.current.push(event.data);
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/wav" });
         const url = URL.createObjectURL(blob);
 
-        // İstifadəçi səsi üçün URL təyin edilir
         setUserAudioUrl(url);
-        // Asistan səsi sıfırlanır
         setAsistantAudioUrl(null);
-
-        // Səsi üst komponentə ötür
         onRecordingComplete(blob);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
     } catch (error) {
-      if (error.name === "NotAllowedError") {
-        alert("Mikrofon izni verilmedi.");
-      } else if (error.name === "NotFoundError") {
-        alert("Mikrofon bulunamadı.");
-      } else {
-        alert("Beklenmeyen bir hata oluştu: " + error.message);
-      }
+      const message =
+        error.name === "NotAllowedError"
+          ? "Mikrofon izni verilmedi."
+          : error.name === "NotFoundError"
+          ? "Mikrofon bulunamadı."
+          : `Hata: ${error.message}`;
+      alert(message);
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
+      audioRef.current.srcObject?.getTracks().forEach((track) => track.stop());
       setIsRecording(false);
-
-      // Mikrofonu kapatma
-      const tracks = audioRef.current.srcObject?.getTracks();
-      tracks?.forEach((track) => track.stop());
-      audioRef.current.srcObject = null;
     }
   };
-
   return (
     <div className="flex flex-col items-center">
       <button

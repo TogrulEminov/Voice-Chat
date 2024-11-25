@@ -7,33 +7,21 @@ const AudioRecorder = dynamic(() => import("@/globalElements/AudioRecorder"), {
   ssr: false,
 });
 const LanguageDevelopment = () => {
-  const feedback = useDashboardStore((state) => state.feedback);
-  const setFeedback = useDashboardStore((state) => state.setFeedback);
-  const toggleRefresh = useDashboardStore((state) => state.toggleRefresh);
-  const asistantAudioUrl = useDashboardStore((state) => state.asistantAudioUrl);
-  const transcribedText = useDashboardStore((state) => state.transcribedText);
-  const setAsistantAudioUrl = useDashboardStore(
-    (state) => state.setAsistantAudioUrl
-  );
-  const setTranscribedText = useDashboardStore(
-    (state) => state.setTranscribedText
-  );
+  const {
+    feedback,
+    setFeedback,
+    toggleRefresh,
+    asistantAudioUrl,
+    setAsistantAudioUrl,
+    transcribedText,
+    setTranscribedText,
+  } = useDashboardStore((state) => state);
 
   const handleRecordingComplete = async (blob) => {
-    const resetStates = () => {
-      setFeedback("");
-      setTranscribedText("");
-      setAsistantAudioUrl((prevUrl) => {
-        if (prevUrl) URL.revokeObjectURL(prevUrl);
-        return null;
-      });
-    };
-
     try {
       if (!blob) {
         throw new Error("Ses kaydı alınamadı");
       }
-      debugger;
       // Step 1: Process audio and get transcription
       const formData = new FormData();
       formData.append("audio", blob, "audio.wav");
@@ -42,76 +30,54 @@ const LanguageDevelopment = () => {
         body: formData,
       });
 
-      if (!audioResponse.ok) {
-        const errorData = await audioResponse.json();
-        throw new Error(errorData.error || "Ses işleme hatası");
-      }
-      console.log(audioResponse);
+      if (!audioResponse.ok)
+        throw new Error(
+          (await audioResponse.json()).error || "Ses işleme hatası"
+        );
 
-      const audioData = await audioResponse.json();
-      setTranscribedText(audioData.transcribedText);
+      const { transcribedText } = await audioResponse.json();
+      setTranscribedText(transcribedText);
 
       // Step 2: Process transcribed text
-      const textResponse = await fetch("/api/process-text/create", {
+      const textRes = await fetch("/api/process-text/create", {
         method: "POST",
-        body: JSON.stringify({ text: audioData.transcribedText }),
+        body: JSON.stringify({ text: transcribedText }),
       });
 
-      if (!textResponse.ok) {
-        const textError = await textResponse.json();
-        throw new Error(textError.message || "Metin işleme hatası");
-      }
+      if (!textRes.ok)
+        throw new Error(
+          (await textRes.json()).message || "Metin işleme hatası"
+        );
 
-      const processedText = await textResponse.json();
-      setFeedback(processedText.text);
+      const { assistantMessage } = await textRes.json();
+      setFeedback(assistantMessage);
 
       // Step 3: Convert response to speech
-      const ttsResponse = await fetch("/api/text-to-speech/create", {
+      const ttsRes = await fetch("/api/text-to-speech/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: processedText.assistantMessage,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: assistantMessage }),
       });
+      if (!ttsRes.ok)
+        throw new Error(
+          (await ttsRes.json()).message || "Ses dönüştürme hatası"
+        );
 
-      if (!ttsResponse.ok) {
-        const ttsError = await ttsResponse.json();
-        throw new Error(ttsError.message || "Ses dönüştürme hatası");
-      }
-
-      const audioBlob = await ttsResponse.blob();
-      const newUrl = URL.createObjectURL(audioBlob);
-      setAsistantAudioUrl(newUrl);
-
-      // Update conversation history
+      setAsistantAudioUrl(URL.createObjectURL(await ttsRes.blob()));
       toggleRefresh();
     } catch (error) {
       console.error("İşlem hatası:", error);
-      resetStates();
       setFeedback(error.message || "Beklenmeyen bir hata oluştu");
+      setAsistantAudioUrl(null);
+      setTranscribedText("");
     }
   };
-
   useEffect(() => {
-    let audio;
-    const playAudio = async () => {
-      try {
-        audio = new Audio(asistantAudioUrl);
-        await audio.play();
-      } catch (error) {
-        console.error("Ses oynatılamadı:", error);
-      }
-    };
-
     if (asistantAudioUrl) {
-      playAudio();
+      const audio = new Audio(asistantAudioUrl);
+      audio.play();
+      return () => audio.pause();
     }
-
-    return () => {
-      audio?.pause();
-    };
   }, [asistantAudioUrl]);
   return (
     <div className="bg-[#F4F4F4] h-full dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full flex-shrink-0 lg:w-[400px] transition duration-200">
