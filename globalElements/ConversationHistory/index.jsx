@@ -2,15 +2,30 @@
 
 import React, { useEffect, useState } from "react";
 import { SiGoogleassistant } from "react-icons/si";
+import { FaMicrophoneLines } from "react-icons/fa6";
+
 import { RiChatHistoryLine } from "react-icons/ri";
 import { useDashboardStore } from "@/utils/dasboardStore";
 import TextToSpeech from "../TextToSpeech";
+import AudioRecorder from "../AudioRecorder";
 
 const ConversationHistory = () => {
-  const { refresh } = useDashboardStore();
+  const { refresh, feedback, transcribedText } = useDashboardStore();
   const [conversations, setConversations] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!refresh) return;
+    setConversations((prevConversations) => [
+      ...prevConversations,
+      {
+        userInput: transcribedText,
+        assistantResponse: feedback,
+        createdAt: new Date().toUTCString(),
+      },
+    ]);
+  }, [refresh, feedback, transcribedText]);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -28,11 +43,7 @@ const ConversationHistory = () => {
 
         const data = await response.json();
         if (data) {
-          // Tarihe göre sıralama
-          const sortedConversations = data.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-          setConversations(sortedConversations);
+          setConversations(data);
         }
       } catch (err) {
         setError("Sunucuya bağlanırken bir hata oluştu.");
@@ -42,9 +53,7 @@ const ConversationHistory = () => {
     };
 
     fetchConversations();
-
-    return () => refresh && fetchConversations();
-  }, [refresh]);
+  }, [red]);
 
   if (error) {
     return <p className="text-red-500">{error}</p>;
@@ -68,7 +77,7 @@ const ConversationHistory = () => {
         <div className="space-y-4  max-h-[50vh] h-full   p-10  bg-[#F4F4F4] overflow-y-scroll">
           {conversations?.map((conv) => (
             <div
-              key={conv.id}
+              key={conv.createdAt}
               className="flex flex-col space-y-2 max-h-[700px]"
             >
               {/* Kullanıcı Mesajı */}
