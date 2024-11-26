@@ -7,14 +7,12 @@ import { useRouter } from "next/navigation";
 import Loading from "@/components/loading";
 import LanguageDevelopment from "@/components/dashboard/languageDevelopment";
 
-
 const ConversationHistory = dynamic(
   () => import("@/globalElements/ConversationHistory"),
   { ssr: false }
 );
 
-const DashboardPageContainer = () => {
-  const { status } = useSession();
+const Dashboard = ({ status }) => {
   const router = useRouter();
 
   useEffect(() => {
@@ -36,6 +34,6 @@ const DashboardPageContainer = () => {
 };
 
 // Bileşeni dinamik olarak yükleyip yalnızca istemci tarafında render edilmesini sağlıyoruz
-export default dynamic(() => Promise.resolve(DashboardPageContainer), {
+export default dynamic(() => Promise.resolve(Dashboard), {
   ssr: false,
 });

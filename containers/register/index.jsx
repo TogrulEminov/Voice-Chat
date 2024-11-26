@@ -1,30 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
 import NextButton from "@/globalElements/Button";
 import { postAPI } from "@/services/fetchApi";
-import { useSession } from "next-auth/react";
 import registerImage from "@/public/images/auth.webp";
 import Image from "next/image";
 import Input from "@/globalElements/Input";
 import Label from "@/globalElements/Label";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 export default function Register() {
-  const { status } = useSession();
   const router = useRouter();
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/dashboard");
-    }
-  }, [status, router]);
-
-  const [fields, setFields] = useState({
+  const [fields, setFields] = React.useState({
     name: "",
     email: "",
     password: "",
   });
-
-  console.log(fields.name);
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,7 +35,7 @@ export default function Register() {
       const res = await postAPI("/auth/register", {
         body: JSON.stringify(fields),
       });
-      console.log("res", res);
+
       if (!res.ok) {
         const errorText = await res?.message;
         try {
@@ -55,6 +45,7 @@ export default function Register() {
           setMessage(`Error: ${errorText}`);
         }
       } else {
+        router.push("/login");
         setFields({
           name: "",
           email: "",

@@ -20,11 +20,6 @@ export default function Login() {
     password: "",
   });
   // Redirect user if authenticated
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/dashboard");
-    }
-  }, [status, router]);
 
   if (status === "loading") {
     return <Loading />;
@@ -49,7 +44,7 @@ export default function Login() {
         email: "",
         password: "",
       });
-      router.push("/dashboard");
+      router.push("/");
     } else {
       setMessage("Login failed. Please check your credentials.");
     }
