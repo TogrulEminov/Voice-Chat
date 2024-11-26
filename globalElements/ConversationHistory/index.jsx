@@ -53,7 +53,7 @@ const ConversationHistory = () => {
     };
 
     fetchConversations();
-  }, [red]);
+  }, []);
 
   if (error) {
     return <p className="text-red-500">{error}</p>;
