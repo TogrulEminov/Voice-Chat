@@ -2,12 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { SiGoogleassistant } from "react-icons/si";
-import { FaMicrophoneLines } from "react-icons/fa6";
-
 import { RiChatHistoryLine } from "react-icons/ri";
 import { useDashboardStore } from "@/utils/dasboardStore";
 import TextToSpeech from "../TextToSpeech";
-import AudioRecorder from "../AudioRecorder";
 
 const ConversationHistory = () => {
   const { refresh, feedback, transcribedText } = useDashboardStore();
