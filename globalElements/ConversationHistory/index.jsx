@@ -11,7 +11,7 @@ const ConversationHistory = () => {
   const [conversations, setConversations] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [selectedText, setSelectedText] = useState("");
   useEffect(() => {
     if (!refresh) return;
     setConversations((prevConversations) => [
@@ -58,6 +58,14 @@ const ConversationHistory = () => {
   if (loading) {
     return <p className="text-red-black">loading....</p>;
   }
+  const handleTextSelection = () => {
+    const selection = window.getSelection().toString();
+    if (selection) {
+      setSelectedText(selection);
+    }
+  };
+
+  console.log(selectedText);
 
   return (
     <div className="flex flex-col flex-1">
@@ -74,6 +82,7 @@ const ConversationHistory = () => {
         <div className="space-y-4  max-h-[80vh] h-full   p-10  bg-white overflow-y-scroll">
           {conversations?.map((conv) => (
             <div
+              onMouseUp={handleTextSelection}
               key={conv.createdAt}
               className="flex flex-col space-y-2 max-h-[700px]"
             >
