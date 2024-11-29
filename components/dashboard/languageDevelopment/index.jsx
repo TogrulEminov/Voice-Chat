@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useDashboardStore } from "@/utils/dasboardStore";
 import React, { useEffect } from "react";
+import Image from "next/image";
 const AudioRecorder = dynamic(() => import("@/globalElements/AudioRecorder"), {
   ssr: false,
 });
@@ -80,32 +81,48 @@ const LanguageDevelopment = () => {
     }
   }, [asistantAudioUrl]);
   return (
-    <div className="bg-[#F4F4F4] h-full dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full flex-shrink-0 lg:w-[400px] transition duration-200">
-      <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">
-        İngilizce Dil Geliştirme
-      </h1>
-      <AudioRecorder onRecordingComplete={handleRecordingComplete} />
-      {transcribedText && (
-        <div className="mt-8">
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            Senin Metnin:
-          </h2>
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {transcribedText}
-          </p>
+    <>
+      <div className="flex  my-4">
+        <div className="bg-[#F4F4F4] h-full dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full flex-grow-0 flex-shrink-0 basis-[70%] transition duration-200">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">
+            İngilizce Dil Geliştirme
+          </h1>
+
+          {transcribedText && (
+            <div className="mt-8">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                Senin Metnin:
+              </h2>
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {transcribedText}
+              </p>
+            </div>
+          )}
+          {feedback && (
+            <div className="mt-8">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                Geri Bildirim:
+              </h2>
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {feedback}
+              </p>
+            </div>
+          )}
         </div>
-      )}
-      {feedback && (
-        <div className="mt-8">
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            Geri Bildirim:
-          </h2>
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {feedback}
-          </p>
+
+        <div className="flex-1">
+          <div className="flex items-center flex-col ">
+            <Image
+              src="/images/person.jpeg"
+              alt="person"
+              width={200}
+              height={200}
+            />
+            <AudioRecorder onRecordingComplete={handleRecordingComplete} />
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 };
 

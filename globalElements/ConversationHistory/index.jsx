@@ -64,7 +64,7 @@ const ConversationHistory = () => {
 
   return (
     <div className="flex flex-col flex-1">
-      <h2 className="text-3xl  px-6 flex items-center justify-center gap-2 font-semibold text-gray-800 dark:text-gray-100 mb-4">
+      <h2 className="text-2xl py-2 bg-black  px-6 flex items-center justify-center gap-2 font-semibold text-gray-200 dark:text-gray-100 mb-4">
         <RiChatHistoryLine />
         Conversation History
       </h2>
@@ -74,7 +74,7 @@ const ConversationHistory = () => {
         </p>
       )}
       {conversations.length > 0 && (
-        <div className="space-y-4  max-h-[50vh] h-full   p-10  bg-[#F4F4F4] overflow-y-scroll">
+        <div className="space-y-4  max-h-[80vh] h-full   p-10  bg-white overflow-y-scroll">
           {conversations?.map((conv) => (
             <div
               key={conv.createdAt}

@@ -7,11 +7,6 @@ import { useRouter } from "next/navigation";
 import Loading from "@/components/loading";
 import LanguageDevelopment from "@/components/dashboard/languageDevelopment";
 
-const ConversationHistory = dynamic(
-  () => import("@/globalElements/ConversationHistory"),
-  { ssr: false }
-);
-
 const Dashboard = ({ status }) => {
   const router = useRouter();
 
@@ -25,9 +20,8 @@ const Dashboard = ({ status }) => {
   }
   return (
     <div className="container mx-auto py-10">
-      <div className="m-2 flex flex-wrap lg:items-stretch gap-4 rounded-lg border-2 border-[#f4f4f4b9] md:flex-row md:items-start  bg-gray-50 dark:bg-gray-900">
+      <div className="m-2 flex space-y-10 lg:items-stretch gap-4 rounded-lg border-2 border-[#f4f4f4b9] md:flex-col md:items-start  ">
         <LanguageDevelopment />
-        <ConversationHistory />
       </div>
     </div>
   );
