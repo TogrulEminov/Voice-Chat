@@ -58,15 +58,25 @@ const ConversationHistory = () => {
   if (loading) {
     return <p className="text-red-black">loading....</p>;
   }
-  const handleTextSelection = () => {
+  const handleTextSelection = async () => {
     const selection = window.getSelection().toString();
     if (selection) {
-      setSelectedText(selection);
+      const response = await fetch("/api/translate/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ selection }),
+      });
+
+      const { translation, synonyms } = await response.json();
+
+      setSelectedText({ selection, translation, synonyms });
     }
+    return null;
   };
 
-  console.log(selectedText);
-
+  console.log("selectedText", selectedText);
   return (
     <div className="flex flex-col flex-1">
       <h2 className="text-2xl py-2 bg-black  px-6 flex items-center justify-center gap-2 font-semibold text-gray-200 dark:text-gray-100 mb-4">
