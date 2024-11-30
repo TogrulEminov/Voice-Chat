@@ -102,7 +102,7 @@ const LanguageDevelopment = () => {
 
   return (
     <>
-      <div className="flex my-4">
+      <div className="flex  m-4">
         <div className="bg-[#F4F4F4] h-full dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full flex-grow-0 flex-shrink-0 basis-[70%] transition duration-200">
           <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">
             İngilizce Dil Geliştirme
@@ -147,7 +147,7 @@ const LanguageDevelopment = () => {
           place="top"
           effect="solid"
           className="text-sm bg-black text-white p-2 rounded-md z-10  absolute"
-          style={{ maxWidth: "none", position: "absolute" }} // Tooltip'in doğru yerleşmesi için position ve z-index ayarları
+          style={{ maxWidth: "none", position: "absolute" }}
         />
       </div>
     </>
