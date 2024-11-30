@@ -28,6 +28,11 @@ export default function Header() {
                 Hoş geldiniz,{" "}
                 <span className="font-semibold">{data.user.name}</span>
               </span>
+              <Link href="/history">
+                <NextButton className="text-sm sm:text-base bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg transition duration-150 ease-in-out">
+                  History
+                </NextButton>
+              </Link>
               <NextButton
                 onClick={() => signOut({ callbackUrl: "/login" })}
                 className="text-sm sm:text-base bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition duration-150 ease-in-out"

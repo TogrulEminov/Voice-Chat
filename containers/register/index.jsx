@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import NextButton from "@/globalElements/Button";
 import { postAPI } from "@/services/fetchApi";
 import registerImage from "@/public/images/auth.webp";

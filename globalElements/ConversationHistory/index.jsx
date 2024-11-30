@@ -2,19 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 import { SiGoogleassistant } from "react-icons/si";
-import { FaMicrophoneLines } from "react-icons/fa6";
-
 import { RiChatHistoryLine } from "react-icons/ri";
 import { useDashboardStore } from "@/utils/dasboardStore";
 import TextToSpeech from "../TextToSpeech";
-import AudioRecorder from "../AudioRecorder";
 
 const ConversationHistory = () => {
   const { refresh, feedback, transcribedText } = useDashboardStore();
   const [conversations, setConversations] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [selectedText, setSelectedText] = useState("");
   useEffect(() => {
     if (!refresh) return;
     setConversations((prevConversations) => [
@@ -61,7 +58,25 @@ const ConversationHistory = () => {
   if (loading) {
     return <p className="text-red-black">loading....</p>;
   }
+  const handleTextSelection = async () => {
+    const selection = window.getSelection().toString();
+    if (selection) {
+      const response = await fetch("/api/translate/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ selection }),
+      });
 
+      const { translation, synonyms } = await response.json();
+
+      setSelectedText({ selection, translation, synonyms });
+    }
+    return null;
+  };
+
+  console.log("selectedText", selectedText);
   return (
     <div className="flex flex-col flex-1">
       <h2 className="text-2xl py-2 bg-black  px-6 flex items-center justify-center gap-2 font-semibold text-gray-200 dark:text-gray-100 mb-4">
@@ -77,6 +92,7 @@ const ConversationHistory = () => {
         <div className="space-y-4  max-h-[80vh] h-full   p-10  bg-white overflow-y-scroll">
           {conversations?.map((conv) => (
             <div
+              onMouseUp={handleTextSelection}
               key={conv.createdAt}
               className="flex flex-col space-y-2 max-h-[700px]"
             >

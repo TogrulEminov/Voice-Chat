@@ -1,44 +1,52 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import React from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { FaMicrophoneLines } from "react-icons/fa6";
 import { FaRegPauseCircle } from "react-icons/fa";
 import { useDashboardStore } from "@/utils/dasboardStore";
 
 export default function AudioRecorder({ onRecordingComplete }) {
+  const MIN_BLOB_SIZE = 24 * 1024; // 88 KB for ~1 second of audio
+  const MAX_RECORDING_DURATION = 60000; // 60 seconds in milliseconds
+
   const [isRecording, setIsRecording] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isRecordingComplete, setIsRecordingComplete] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0); // Kaydın süresi
+  const [recordingTime, setRecordingTime] = useState(0);
 
   const { setAsistantAudioUrl, setUserAudioUrl, userAudioUrl } =
     useDashboardStore((state) => state);
+
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const recordingTimeoutRef = useRef(null); // Zamanlayıcıyı saklamak için referans
-  const timerRef = useRef(null); // Timer referansı
-  console.log(timerRef, "timerRef");
-  console.log(recordingTime, "recordingTime");
-
-  useEffect(() => {
-    // Temizlik işlemi: Timer'ı temizle ve akışı durdur
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      if (recordingTimeoutRef.current) {
-        clearTimeout(recordingTimeoutRef.current); // Zamanlayıcıyı temizle
-      }
-      audioRef?.current?.srcObject
-        ?.getTracks()
-        .forEach((track) => track.stop());
-    };
+  const timerRef = useRef(null);
+  const timeoutRef = useRef(null);
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      audioRef.current.srcObject?.getTracks().forEach((track) => track.stop());
+    }
+    resetState();
   }, []);
+  useEffect(() => {
+    return () => {
+      stopRecording();
+      clearInterval(timerRef.current);
+      clearTimeout(timeoutRef.current);
+    };
+  }, [stopRecording]);
+
+  const resetState = () => {
+    setIsRecording(false);
+    setRecordingTime(0);
+    setErrorMessage("");
+    clearInterval(timerRef.current);
+    clearTimeout(timeoutRef.current);
+  };
 
   const startRecording = async () => {
     try {
-      setErrorMessage(""); // Her yeni kayda başlarken hatayı sıfırla
-
+      setErrorMessage(""); // Reset error message
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioRef.current.srcObject = stream;
 
@@ -48,32 +56,22 @@ export default function AudioRecorder({ onRecordingComplete }) {
 
       mediaRecorder.ondataavailable = (event) =>
         audioChunksRef.current.push(event.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-        const url = URL.createObjectURL(blob);
 
-        setUserAudioUrl(url);
-        setAsistantAudioUrl(null);
-        onRecordingComplete(blob);
-        setIsRecordingComplete(true); // Kayıt tamamlandığında durumu güncelle
-        clearInterval(timerRef.current); // Timer'ı durdur
-      };
+      mediaRecorder.onstop = () => handleRecordingStop();
 
       mediaRecorder.start();
       setIsRecording(true);
-      setRecordingTime(0); // Süreyi sıfırla
-      setIsRecordingComplete(false); // Kayıt başlamadan önce tamamlama durumunu sıfırla
 
-      // Kayıt süresi için bir interval başlat
+      // Start timer
       timerRef.current = setInterval(() => {
-        setRecordingTime((prevTime) => prevTime + 1); // Her saniyede bir süreyi artır
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
 
-      // 1 dakika sonra kaydı durdur
-      recordingTimeoutRef.current = setTimeout(() => {
+      // Auto-stop recording after MAX_RECORDING_DURATION
+      timeoutRef.current = setTimeout(() => {
         stopRecording();
         setErrorMessage("Ses kaydı 1 dakikayı geçemez.");
-      }, 60000);
+      }, MAX_RECORDING_DURATION);
     } catch (error) {
       const message =
         error.name === "NotAllowedError"
@@ -81,22 +79,26 @@ export default function AudioRecorder({ onRecordingComplete }) {
           : error.name === "NotFoundError"
           ? "Mikrofon bulunamadı."
           : `Hata: ${error.message}`;
-      alert(message);
+      setErrorMessage(message);
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      audioRef.current.srcObject?.getTracks().forEach((track) => track.stop());
-      setIsRecording(false);
+  const handleRecordingStop = () => {
+    const blob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+    console.log(blob.size);
+
+    if (blob.size < MIN_BLOB_SIZE) {
+      setErrorMessage("Ses kaydı en az 1 saniye olmalıdır.");
+      return;
     }
-    if (recordingTimeoutRef.current) {
-      clearTimeout(recordingTimeoutRef.current); // Zamanlayıcıyı temizle
-    }
+
+    const url = URL.createObjectURL(blob);
+    setUserAudioUrl(url);
+    setAsistantAudioUrl(null);
+    onRecordingComplete(blob);
+    resetState();
   };
 
-  // Saniyeyi '00:05' formatında göstermek için yardımcı fonksiyon
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -107,7 +109,7 @@ export default function AudioRecorder({ onRecordingComplete }) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="flex items-end justify-center ">
+      <div className="flex items-end justify-center">
         <button
           onClick={isRecording ? stopRecording : startRecording}
           className={`px-6 py-6 mt-4 rounded-full font-semibold shadow-lg transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-opacity-50 ${
@@ -122,10 +124,8 @@ export default function AudioRecorder({ onRecordingComplete }) {
             <FaMicrophoneLines className="w-14 h-14" />
           )}
         </button>
-        {recordingTime ? (
-          <span className="text-red-700">{formatTime(recordingTime)}</span>
-        ) : (
-          ""
+        {recordingTime > 0 && (
+          <span className="text-red-700 ml-4">{formatTime(recordingTime)}</span>
         )}
       </div>
 
@@ -138,7 +138,7 @@ export default function AudioRecorder({ onRecordingComplete }) {
         </div>
       )}
 
-      {isRecordingComplete && userAudioUrl && (
+      {userAudioUrl && !isRecording && (
         <div className="mt-4 p-4 bg-green-200 rounded-lg shadow-lg max-w-xs text-center">
           <p className="text-sm font-semibold">Ses kaydınız tamamlandı!</p>
           <audio controls src={userAudioUrl} className="mt-2" />
@@ -149,7 +149,7 @@ export default function AudioRecorder({ onRecordingComplete }) {
         <div className="mt-4 text-red-600 font-semibold">{errorMessage}</div>
       )}
 
-      {/* Mikrofon akışını dinlemek için bir gizli ses öğesi */}
+      {/* Hidden audio element for microphone stream */}
       <audio ref={audioRef} hidden />
     </div>
   );

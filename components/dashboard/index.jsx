@@ -2,14 +2,12 @@
 
 import React, { useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/loading";
 import LanguageDevelopment from "@/components/dashboard/languageDevelopment";
 
 const Dashboard = ({ status }) => {
   const router = useRouter();
-
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
