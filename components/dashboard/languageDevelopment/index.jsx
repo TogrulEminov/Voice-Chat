@@ -1,12 +1,16 @@
 "use client";
-// Bileşenlerin sadece istemci tarafında çalışacak şekilde düzenlenmesi
+
 import dynamic from "next/dynamic";
 import { useDashboardStore } from "@/utils/dasboardStore";
 import React, { useEffect } from "react";
 import Image from "next/image";
+import { Tooltip } from "react-tooltip";
+import "react-tooltip/dist/react-tooltip.css";
+
 const AudioRecorder = dynamic(() => import("@/globalElements/AudioRecorder"), {
   ssr: false,
 });
+
 const LanguageDevelopment = () => {
   const {
     feedback,
@@ -23,7 +27,7 @@ const LanguageDevelopment = () => {
       if (!blob) {
         throw new Error("Ses kaydı alınamadı");
       }
-      // Step 1: Process audio and get transcription
+
       const formData = new FormData();
       formData.append("audio", blob, "audio.wav");
       const audioResponse = await fetch("/api/process-audio/create", {
@@ -39,7 +43,6 @@ const LanguageDevelopment = () => {
       const { transcribedText } = await audioResponse.json();
       setTranscribedText(transcribedText);
 
-      // Step 2: Process transcribed text
       const textRes = await fetch("/api/process-text/create", {
         method: "POST",
         body: JSON.stringify({ text: transcribedText }),
@@ -53,12 +56,12 @@ const LanguageDevelopment = () => {
       const { assistantMessage } = await textRes.json();
       setFeedback(assistantMessage);
 
-      // Step 3: Convert response to speech
       const ttsRes = await fetch("/api/text-to-speech/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: assistantMessage }),
       });
+
       if (!ttsRes.ok)
         throw new Error(
           (await ttsRes.json()).message || "Ses dönüştürme hatası"
@@ -73,6 +76,7 @@ const LanguageDevelopment = () => {
       setTranscribedText("");
     }
   };
+
   useEffect(() => {
     if (asistantAudioUrl) {
       const audio = new Audio(asistantAudioUrl);
@@ -80,9 +84,25 @@ const LanguageDevelopment = () => {
       return () => audio.pause();
     }
   }, [asistantAudioUrl]);
+
+  // Metni kelimelere bölüp tooltip ekleyen fonksiyon
+  const renderTextWithTooltips = (text) => {
+    return text.split(" ").map((word, index) => (
+      <span
+        key={index}
+        data-tooltip-id="tooltip"
+        data-tooltip-delay-hide={1000}
+        data-tooltip-content={word} // Tooltip içeriği
+        className="cursor-pointer mx-1 relative"
+      >
+        {word}
+      </span>
+    ));
+  };
+
   return (
     <>
-      <div className="flex  my-4">
+      <div className="flex my-4">
         <div className="bg-[#F4F4F4] h-full dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full flex-grow-0 flex-shrink-0 basis-[70%] transition duration-200">
           <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">
             İngilizce Dil Geliştirme
@@ -94,17 +114,18 @@ const LanguageDevelopment = () => {
                 Senin Metnin:
               </h2>
               <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                {transcribedText}
+                {renderTextWithTooltips(transcribedText)}
               </p>
             </div>
           )}
+
           {feedback && (
             <div className="mt-8">
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
                 Geri Bildirim:
               </h2>
               <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                {feedback}
+                {renderTextWithTooltips(feedback)}
               </p>
             </div>
           )}
@@ -121,6 +142,13 @@ const LanguageDevelopment = () => {
             <AudioRecorder onRecordingComplete={handleRecordingComplete} />
           </div>
         </div>
+        <Tooltip
+          id="tooltip"
+          place="top"
+          effect="solid"
+          className="text-sm bg-black text-white p-2 rounded-md z-10  absolute"
+          style={{ maxWidth: "none", position: "absolute" }} // Tooltip'in doğru yerleşmesi için position ve z-index ayarları
+        />
       </div>
     </>
   );
